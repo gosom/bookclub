@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-  needs: Build
   deploy:
     name: Deploy app
     runs-on: ubuntu-latest

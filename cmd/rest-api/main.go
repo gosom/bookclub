@@ -1,14 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	"time"
 )
 
 func main() {
-	ctx := context.Background()
+	for {
+		time.Sleep(1 * time.Second)
+		fmt.Println("Hello World")
+	}
 
-	fmt.Println("Hello World")
-
-	<-ctx.Done()
 }

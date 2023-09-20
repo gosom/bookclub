@@ -1,0 +1,88 @@
+openapi: 3.0.3
+
+info:
+  title: Bookclub API
+  description: |
+    This API allows you to interact with Bookclub API
+  version: 0.0.1
+  
+paths: 
+  /users:
+    post:
+      summary: create a User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserResponse"
+        "400":
+          description: Is returned when an error related to the Request data occurs.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Is returned when the user is already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Is returned when an error with applicatio occurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    CreateUserRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          description: |
+            the password must be between 8 and 30 chars and it must contain at least 1 lower case,
+            1 upper case, 1 special char and 1 number
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 30
+      required:
+        - email
+        - password
+          
+    CreateUserResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+      required:
+        - id
+        - email
+          
+    ErrorResponse:
+      type: object
+      properties:
+        code: 
+          type: integer
+          enum:
+            - 400
+            - 409
+            - 500
+        msg: 
+          type: string
+      required:
+        - code
+        - msg

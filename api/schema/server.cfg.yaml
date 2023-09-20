@@ -1,0 +1,5 @@
+package: schema
+generate:
+  - chi-server
+  - types
+output: booklub_server.gen.go

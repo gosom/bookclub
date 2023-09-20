@@ -1,16 +1,27 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/gosom/bookclub/api"
+	"github.com/gosom/bookclub/api/schema"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprint(w, "Hello World!")
-	})
+	bookclubAPI := api.NewBooklubAPI()
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	r := chi.NewRouter()
+
+	schema.HandlerFromMux(bookclubAPI, r)
+
+	s := &http.Server{
+		Handler: r,
+		Addr:    ":8080",
+	}
+
+	if err := s.ListenAndServe(); err != nil {
 		panic(err)
 	}
 }

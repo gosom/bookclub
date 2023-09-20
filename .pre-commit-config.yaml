@@ -15,3 +15,10 @@ repos:
       types: [go]
       require_serial: true
       pass_filenames: false
+    - id: gotest
+      name: go test -v -race ./...
+      entry: go test -v ./...
+      language: golang
+      types: [go]
+      require_serial: true
+      pass_filenames: false

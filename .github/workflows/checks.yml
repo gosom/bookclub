@@ -36,3 +36,6 @@ jobs:
 
       - name: Go Build
         run: go build -o /dev/null ./...
+
+      - name: Go Test
+        run: go test -v -race ./...

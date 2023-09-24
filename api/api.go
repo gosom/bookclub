@@ -4,16 +4,20 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/gosom/bookclub"
 	"github.com/gosom/bookclub/api/schema"
 )
 
 var _ schema.ServerInterface = (*bookClubAPI)(nil)
 
 type bookClubAPI struct {
+	userUC bookclub.UserUseCases
 }
 
-func NewBooklubAPI() schema.ServerInterface {
-	return &bookClubAPI{}
+func NewBooklubAPI(userUC bookclub.UserUseCases) schema.ServerInterface {
+	return &bookClubAPI{
+		userUC: userUC,
+	}
 }
 
 func (b *bookClubAPI) PostUsers(w http.ResponseWriter, r *http.Request) {
@@ -29,13 +33,39 @@ func (b *bookClubAPI) PostUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO here we need to call the service to create the user
-	// and return him. We skip for now. Email and passwords needs
-	// to be also validated.
+	user, err := b.userUC.Register(r.Context(), bookclub.RegisterParams{
+		Email:    payload.Email,
+		Password: payload.Password,
+	})
+	if err != nil {
+		resp := schema.ErrorResponse{}
+
+		switch err {
+		case bookclub.ErrInvalidEmail:
+			resp.Code = schema.N400
+			resp.Msg = err.Error()
+		case bookclub.ErrInvalidPassword:
+			resp.Code = schema.N400
+			resp.Msg = err.Error()
+		case bookclub.ErrInternalError:
+			resp.Code = schema.N500
+			resp.Msg = err.Error()
+		case bookclub.ErrAlreadyExists:
+			resp.Code = schema.N409
+			resp.Msg = err.Error()
+		default:
+			resp.Code = schema.N500
+			resp.Msg = "internal server error"
+		}
+
+		renderJSON(w, int(resp.Code), resp)
+
+		return
+	}
 
 	ans := schema.CreateUserResponse{
-		Email: payload.Email,
-		Id:    "c69625f8-57ab-11ee-8d34-38f3ab390182",
+		Email: string(user.Email),
+		Id:    user.ID.String(),
 	}
 
 	renderJSON(w, http.StatusCreated, ans)

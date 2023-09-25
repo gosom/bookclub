@@ -2,9 +2,15 @@ package postgres
 
 import (
 	"context"
+	"errors"
 
 	"github.com/gosom/bookclub"
 	"github.com/gosom/bookclub/postgres/db"
+	"github.com/jackc/pgx/v5/pgconn"
+)
+
+const (
+	uniqueViolation = "23505"
 )
 
 var _ bookclub.Storage = (*storage)(nil)
@@ -31,7 +37,14 @@ func (s *storage) CreateUser(
 
 	user, err := s.q.CreateUser(ctx, params)
 	if err != nil {
-		return bookclub.User{}, err
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == uniqueViolation {
+				return bookclub.User{}, bookclub.ErrAlreadyExists
+			}
+		}
+
+		return bookclub.User{}, bookclub.ErrInternalError
 	}
 
 	return dbUserToUser(user), nil

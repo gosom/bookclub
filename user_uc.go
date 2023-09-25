@@ -14,7 +14,3 @@ type RegisterParams struct {
 type UserUseCases interface {
 	Register(ctx context.Context, params RegisterParams) (User, error)
 }
-
-type UserRepo interface {
-	CreateUser(ctx context.Context, user *User) error
-}

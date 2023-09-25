@@ -3,16 +3,9 @@ package postgres_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"path/filepath"
-	"runtime"
 	"time"
 
-	"github.com/golang-migrate/migrate/v4"
-
-	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/testcontainers/testcontainers-go"
@@ -92,32 +85,4 @@ func createContainer(ctx context.Context) (testcontainers.Container, *pgxpool.Po
 	}
 
 	return container, db, dbAddr, nil
-}
-
-func migrateDb(dbAddr string) error {
-	_, path, _, ok := runtime.Caller(0)
-	if !ok {
-		return fmt.Errorf("failed to get path")
-	}
-	pathToMigrationFiles := filepath.Dir(path) + "/../scripts/migrations"
-
-	databaseURL := fmt.Sprintf("pgx5://%s:%s@%s/%s?sslmode=disable",
-		dbUser, dbPass, dbAddr, dbName)
-
-	m, err := migrate.New(
-		fmt.Sprintf("file:%s", pathToMigrationFiles),
-		databaseURL,
-	)
-	if err != nil {
-		return err
-	}
-
-	defer m.Close()
-
-	err = m.Up()
-	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		return err
-	}
-
-	return nil
 }

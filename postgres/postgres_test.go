@@ -2,6 +2,7 @@ package postgres_test
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -20,7 +21,12 @@ func TestMain(m *testing.M) {
 	testDbInstance = testDB.DbInstance
 	defer testDB.TearDown()
 
-	if err := migrateDb(testDB.DbAddress); err != nil {
+	migrationsPath := "../scripts/migrations"
+
+	dsn := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
+		dbUser, dbPass, testDB.DbAddress, dbName)
+
+	if err := postgres.Migrate(dsn, migrationsPath); err != nil {
 		panic(err)
 	}
 

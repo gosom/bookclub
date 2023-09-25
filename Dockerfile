@@ -12,5 +12,7 @@ FROM scratch
 
 COPY --from=builder /usr/bin/rest-api /rest-api
 
+COPY --from=builder /app/scripts/migrations /migrations
+
 ENTRYPOINT ["/rest-api"]
 

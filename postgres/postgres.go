@@ -3,10 +3,17 @@ package postgres
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/jackc/pgx/v5/pgconn"
+
+	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/gosom/bookclub"
 	"github.com/gosom/bookclub/postgres/db"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 const (
@@ -59,4 +66,27 @@ func dbUserToUser(dbUser db.User) bookclub.User {
 	}
 
 	return ans
+}
+
+func Migrate(dbAddr, migrationsPath string) error {
+	fmt.Println(dbAddr)
+	_, second, ok := strings.Cut(dbAddr, "://")
+	if !ok {
+		return errors.New("invalid dbAddr")
+	}
+
+	dburl := "pgx5" + "://" + second
+	m, err := migrate.New(fmt.Sprintf("file:%s", migrationsPath), dburl)
+	if err != nil {
+		return err
+	}
+
+	defer m.Close()
+
+	err = m.Up()
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		return err
+	}
+
+	return nil
 }

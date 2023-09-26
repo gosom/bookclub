@@ -63,7 +63,7 @@ func main() {
 
 	userUC := useruc.NewUserUseCases(store)
 
-	bookclubAPI := api.NewBooklubAPI(userUC)
+	bookclubAPI := api.NewBooklubAPI(userUC, nil)
 
 	r := chi.NewRouter()
 

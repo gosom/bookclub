@@ -17,6 +17,7 @@ var (
 	ErrInvalidEmail     error = errors.New("invalid email")
 	ErrInternalError    error = errors.New("internal error")
 	ErrAlreadyExists          = errors.New("resource already exists")
+	ErrInvalidCredentials = errors.New("invalid credentials")
 )
 
 type User struct {

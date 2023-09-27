@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
 	_ "github.com/golang-migrate/migrate/v4/database/pgx/v5"
@@ -57,6 +58,22 @@ func (s *storage) CreateUser(
 	return dbUserToUser(user), nil
 }
 
+func (s *storage) GetUserByEmail(
+	ctx context.Context,
+	email bookclub.Email,
+) (bookclub.User, error) {
+	user, err := s.q.GetUserByEmail(ctx, string(email))
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return bookclub.User{}, bookclub.ErrNotFound
+		}
+
+		return bookclub.User{}, bookclub.ErrInternalError
+	}
+
+	return dbUserToUser(user), nil
+}
+
 func dbUserToUser(dbUser db.User) bookclub.User {
 	ans := bookclub.User{
 		ID:        dbUser.ID,
@@ -64,6 +81,8 @@ func dbUserToUser(dbUser db.User) bookclub.User {
 		CreatedAt: dbUser.CreatedAt.Time,
 		UpdatedAt: dbUser.UpdatedAt.Time,
 	}
+
+	ans.SetPassword(dbUser.Passwd)
 
 	return ans
 }

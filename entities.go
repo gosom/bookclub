@@ -12,12 +12,13 @@ import (
 )
 
 var (
-	ErrPasswordMismatch error = errors.New("password mismatch")
-	ErrInvalidPassword        = errors.New("password must be between 8 and 30 characters and contain at least one number, one uppercase letter, one lowercase letter, and one special character")
-	ErrInvalidEmail     error = errors.New("invalid email")
-	ErrInternalError    error = errors.New("internal error")
-	ErrAlreadyExists          = errors.New("resource already exists")
-	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrPasswordMismatch   error = errors.New("password mismatch")
+	ErrInvalidPassword          = errors.New("password must be between 8 and 30 characters and contain at least one number, one uppercase letter, one lowercase letter, and one special character")
+	ErrInvalidEmail       error = errors.New("invalid email")
+	ErrInternalError      error = errors.New("internal error")
+	ErrAlreadyExists            = errors.New("resource already exists")
+	ErrInvalidCredentials       = errors.New("invalid credentials")
+	ErrNotFound                 = errors.New("resource not found")
 )
 
 type User struct {

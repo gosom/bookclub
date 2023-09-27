@@ -53,3 +53,18 @@ func (mr *MockStorageMockRecorder) CreateUser(arg0, arg1, arg2 any) *gomock.Call
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockStorage)(nil).CreateUser), arg0, arg1, arg2)
 }
+
+// GetUserByEmail mocks base method.
+func (m *MockStorage) GetUserByEmail(arg0 context.Context, arg1 bookclub.Email) (bookclub.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByEmail", arg0, arg1)
+	ret0, _ := ret[0].(bookclub.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByEmail indicates an expected call of GetUserByEmail.
+func (mr *MockStorageMockRecorder) GetUserByEmail(arg0, arg1 any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockStorage)(nil).GetUserByEmail), arg0, arg1)
+}

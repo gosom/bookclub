@@ -92,6 +92,42 @@ func Test_Integration_CreateUser(t *testing.T) {
 	})
 }
 
+func Test_Integration_GetUserByEmail(t *testing.T) {
+	store := postgres.New(testDbInstance)
+
+	t.Run("should return a user", func(t *testing.T) {
+		defer truncateTables(t)
+
+		email, err := bookclub.NewEmail("j@doe.com")
+		require.NoError(t, err)
+
+		passwd, err := bookclub.NewPassword("123aA@123123")
+		require.NoError(t, err)
+
+		user, err := store.CreateUser(context.Background(), email, passwd)
+		require.NoError(t, err)
+
+		userFromDB, err := store.GetUserByEmail(context.Background(), email)
+		require.NoError(t, err)
+
+		require.Equal(t, user, userFromDB)
+	})
+
+	t.Run("should return ErrNotFound if user does not exist", func(t *testing.T) {
+		defer truncateTables(t)
+
+		email, err := bookclub.NewEmail("j@doe.com")
+		require.NoError(t, err)
+
+		userFromDB, err := store.GetUserByEmail(context.Background(), email)
+		require.Error(t, err)
+
+		require.ErrorIs(t, bookclub.ErrNotFound, err)
+
+		require.Equal(t, bookclub.User{}, userFromDB)
+	})
+}
+
 func truncateTables(t *testing.T) {
 	t.Helper()
 	q := `TRUNCATE TABLE users RESTART IDENTITY CASCADE;`

@@ -61,3 +61,34 @@ func (o *authUseCases) Login(ctx context.Context, params bookclub.LoginParams) (
 
 	return accessToken, refreshToken, nil
 }
+
+func (o *authUseCases) Refresh(ctx context.Context, refreshToken string) (string, string, error) {
+	claims, err := o.jwtProvider.ValidateToken(ctx, refreshToken)
+	if err != nil {
+		return "", "", bookclub.ErrInvalidCredentials
+	}
+
+	if !claims.Refresh {
+		return "", "", bookclub.ErrInvalidCredentials
+	}
+
+	accessToken, err := o.jwtProvider.GenerateToken(ctx, bookclub.JWTGenerateParams{
+		UserID: claims.Subject,
+		TTL:    15 * time.Minute,
+	})
+
+	if err != nil {
+		return "", "", bookclub.ErrInternalError
+	}
+
+	refreshToken, err = o.jwtProvider.GenerateRefreshToken(ctx, bookclub.JWTGenerateParams{
+		Refresh: true,
+		UserID:  claims.Subject,
+		TTL:     1 * time.Hour,
+	})
+	if err != nil {
+		return "", "", bookclub.ErrInternalError
+	}
+
+	return accessToken, refreshToken, nil
+}

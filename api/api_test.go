@@ -24,7 +24,7 @@ func Test_PostUsers(t *testing.T) {
 
 	userUc := mocks.NewMockUserUseCases(mctrl)
 
-	bc := api.NewBooklubAPI(userUc)
+	bc := api.NewBooklubAPI(userUc, nil)
 
 	bodytpl := `{"email": "%s", "password": "%s"}`
 

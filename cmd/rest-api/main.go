@@ -13,12 +13,16 @@ import (
 
 	"github.com/gosom/bookclub/api"
 	"github.com/gosom/bookclub/api/schema"
+	"github.com/gosom/bookclub/jwtprovider"
 	"github.com/gosom/bookclub/postgres"
+	"github.com/gosom/bookclub/usecases/authuc"
 	"github.com/gosom/bookclub/usecases/useruc"
 )
 
 type Config struct {
-	PGURL string `default:"postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"`
+	PGURL      string `default:"postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"`
+	JWT_ISSUER string `default:"bookclub"`
+	JWT_SECRET string `default:"secret"`
 }
 
 func (c *Config) FromEnv() error {
@@ -60,10 +64,12 @@ func main() {
 	}
 
 	store := postgres.New(dbpool)
+	jwtProv := jwtprovider.New(cfg.JWT_SECRET, cfg.JWT_ISSUER)
 
 	userUC := useruc.NewUserUseCases(store)
+	authUC := authuc.NewAuthUseCases(store, jwtProv)
 
-	bookclubAPI := api.NewBooklubAPI(userUC)
+	bookclubAPI := api.NewBooklubAPI(userUC, authUC)
 
 	r := chi.NewRouter()
 

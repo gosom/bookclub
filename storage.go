@@ -6,4 +6,5 @@ import "context"
 
 type Storage interface {
 	CreateUser(ctx context.Context, email Email, passwd Password) (User, error)
+	GetUserByEmail(ctx context.Context, email Email) (User, error)
 }

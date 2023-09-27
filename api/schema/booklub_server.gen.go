@@ -13,6 +13,7 @@ import (
 // Defines values for ErrorResponseCode.
 const (
 	N400 ErrorResponseCode = 400
+	N401 ErrorResponseCode = 401
 	N409 ErrorResponseCode = 409
 	N500 ErrorResponseCode = 500
 )
@@ -41,11 +42,40 @@ type ErrorResponse struct {
 // ErrorResponseCode defines model for ErrorResponse.Code.
 type ErrorResponseCode int
 
+// LoginRequest defines model for LoginRequest.
+type LoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+// LoginToken defines model for LoginToken.
+type LoginToken struct {
+	Access  string `json:"access"`
+	Refresh string `json:"refresh"`
+}
+
+// RefreshTokenRequest defines model for RefreshTokenRequest.
+type RefreshTokenRequest struct {
+	Refresh string `json:"refresh"`
+}
+
+// PostAuthLoginJSONRequestBody defines body for PostAuthLogin for application/json ContentType.
+type PostAuthLoginJSONRequestBody = LoginRequest
+
+// PostAuthRefreshJSONRequestBody defines body for PostAuthRefresh for application/json ContentType.
+type PostAuthRefreshJSONRequestBody = RefreshTokenRequest
+
 // PostUsersJSONRequestBody defines body for PostUsers for application/json ContentType.
 type PostUsersJSONRequestBody = CreateUserRequest
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// perform user login
+	// (POST /auth/login)
+	PostAuthLogin(w http.ResponseWriter, r *http.Request)
+	// refresh an token
+	// (POST /auth/refresh)
+	PostAuthRefresh(w http.ResponseWriter, r *http.Request)
 	// create a User
 	// (POST /users)
 	PostUsers(w http.ResponseWriter, r *http.Request)
@@ -54,6 +84,18 @@ type ServerInterface interface {
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
 
 type Unimplemented struct{}
+
+// perform user login
+// (POST /auth/login)
+func (_ Unimplemented) PostAuthLogin(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// refresh an token
+// (POST /auth/refresh)
+func (_ Unimplemented) PostAuthRefresh(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
 
 // create a User
 // (POST /users)
@@ -69,6 +111,36 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// PostAuthLogin operation middleware
+func (siw *ServerInterfaceWrapper) PostAuthLogin(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostAuthLogin(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// PostAuthRefresh operation middleware
+func (siw *ServerInterfaceWrapper) PostAuthRefresh(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PostAuthRefresh(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // PostUsers operation middleware
 func (siw *ServerInterfaceWrapper) PostUsers(w http.ResponseWriter, r *http.Request) {
@@ -198,6 +270,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/login", wrapper.PostAuthLogin)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/auth/refresh", wrapper.PostAuthRefresh)
+	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/users", wrapper.PostUsers)
 	})

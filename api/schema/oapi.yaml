@@ -10,6 +10,7 @@ paths:
   /users:
     post:
       summary: create a User
+      tags: [user]
       requestBody:
         required: true
         content:
@@ -41,6 +42,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+  
+  /auth/login:
+    post:
+      summary: perform user login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "401":
+          description: Is returned when the credentials are invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Is returned when an error with application occurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    
+  /auth/refresh:
+    post:
+      summary: refresh an token
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginToken"
+        "401":
+          description: Is returned when the refresh token is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Is returned when an error with application occurs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 
 components:
   schemas:
@@ -71,6 +133,39 @@ components:
       required:
         - id
         - email
+    
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 30
+      required:
+        - email
+        - password
+        
+    LoginToken:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+      required:
+       - access
+       - refresh
+    
+    RefreshTokenRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+      required:
+        - refresh
           
     ErrorResponse:
       type: object
@@ -79,6 +174,7 @@ components:
           type: integer
           enum:
             - 400
+            - 401
             - 409
             - 500
         msg: 
@@ -86,3 +182,4 @@ components:
       required:
         - code
         - msg
+

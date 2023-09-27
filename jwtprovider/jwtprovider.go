@@ -42,6 +42,45 @@ func (o *jwtProvider) GenerateRefreshToken(ctx context.Context, params bookclub.
 	return o.generateToken(ctx, params)
 }
 
+func (o *jwtProvider) ValidateToken(ctx context.Context, tokenString string) (bookclub.JWTClaims, error) {
+	var claims customClaims
+
+	tok, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
+		alg := token.Header["alg"]
+		if alg != jwt.SigningMethodHS256.Alg() {
+			return nil, errors.New("invalid signing method")
+		}
+
+		issuer, err := token.Claims.GetIssuer()
+		if err != nil {
+			return nil, err
+		}
+
+		if issuer != o.issuer {
+			return nil, errors.New("invalid issuer")
+		}
+
+		return o.secret, nil
+	})
+
+	if err != nil {
+		return bookclub.JWTClaims{}, bookclub.ErrInvalidCredentials
+	}
+
+	if !tok.Valid {
+		return bookclub.JWTClaims{}, bookclub.ErrInvalidCredentials
+	}
+
+	ans := bookclub.JWTClaims{
+		Subject:   claims.Subject,
+		Refresh:   claims.Refresh,
+		IssuedAt:  claims.IssuedAt.Time,
+		ExpiresAt: claims.ExpiresAt.Time,
+	}
+
+	return ans, nil
+}
+
 func (o *jwtProvider) generateToken(ctx context.Context, params bookclub.JWTGenerateParams) (string, error) {
 	if params.UserID == "" {
 		return "", errors.New("cannot generate token with empty ID")

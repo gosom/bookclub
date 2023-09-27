@@ -156,3 +156,56 @@ func Test_Login(t *testing.T) {
 		})
 	})
 }
+
+func Test_Refresh(t *testing.T) {
+	t.Run("should return ErrInvalidCredentials if refresh token is invalid", func(t *testing.T) {
+		mctrl := gomock.NewController(t)
+
+		jwtProv := mocks.NewMockJWTProvider(mctrl)
+		jwtProv.EXPECT().ValidateToken(gomock.Any(), gomock.Any()).
+			Return(bookclub.JWTClaims{}, bookclub.ErrInvalidCredentials)
+
+		uc := authuc.NewAuthUseCases(nil, jwtProv)
+
+		_, _, err := uc.Refresh(
+			context.Background(), "refresh_token",
+		)
+
+		require.ErrorIs(t, err, bookclub.ErrInvalidCredentials)
+	})
+
+	t.Run("should return a new access and refresh token", func(t *testing.T) {
+		userID := uuid.New()
+		mctrl := gomock.NewController(t)
+
+		jwtProv := mocks.NewMockJWTProvider(mctrl)
+		jwtProv.EXPECT().ValidateToken(gomock.Any(), gomock.Any()).
+			Return(bookclub.JWTClaims{
+				Subject: userID.String(),
+				Refresh: true,
+			}, nil)
+
+		jwtProv.EXPECT().GenerateToken(gomock.Any(), bookclub.JWTGenerateParams{
+			UserID: userID.String(),
+			TTL:    15 * time.Minute,
+		}).
+			Return("access_token", nil)
+		jwtProv.EXPECT().GenerateRefreshToken(gomock.Any(), bookclub.JWTGenerateParams{
+			Refresh: true,
+			UserID:  userID.String(),
+			TTL:     1 * time.Hour,
+		}).
+			Return("refresh_token", nil)
+
+		uc := authuc.NewAuthUseCases(nil, jwtProv)
+
+		accessToken, refreshToken, err := uc.Refresh(
+			context.Background(), "refresh_token",
+		)
+
+		require.NoError(t, err)
+
+		require.Equal(t, "access_token", accessToken)
+		require.Equal(t, "refresh_token", refreshToken)
+	})
+}

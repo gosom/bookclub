@@ -14,6 +14,7 @@ type LoginParams struct {
 
 type AuthUseCases interface {
 	Login(ctx context.Context, params LoginParams) (string, string, error)
+	Refresh(ctx context.Context, refreshToken string) (string, string, error)
 }
 
 type JWTGenerateParams struct {
@@ -32,4 +33,5 @@ type JWTClaims struct {
 type JWTProvider interface {
 	GenerateToken(ctx context.Context, params JWTGenerateParams) (string, error)
 	GenerateRefreshToken(ctx context.Context, params JWTGenerateParams) (string, error)
+	ValidateToken(ctx context.Context, token string) (JWTClaims, error)
 }

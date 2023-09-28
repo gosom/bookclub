@@ -19,6 +19,7 @@ var (
 	ErrAlreadyExists            = errors.New("resource already exists")
 	ErrInvalidCredentials       = errors.New("invalid credentials")
 	ErrNotFound                 = errors.New("resource not found")
+	ErrInvalidBody 			= errors.New("invalid request body")
 )
 
 type User struct {

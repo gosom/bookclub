@@ -42,6 +42,10 @@ func LogMiddleware(next http.Handler) http.Handler {
 				fields = append(fields, "error", err)
 			}
 
+			if stErr, ok := err.(StackTracer); ok {
+				fields = append(fields, "stacktrace", stErr.Stacktrace())
+			}
+
 			if srw.status >= 200 && srw.status < 500 {
 				Log(r.Context(), "HTTP", fields...)
 			} else {

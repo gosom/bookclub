@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/gosom/bookclub"
@@ -41,16 +42,15 @@ func renderError(r *http.Request, w http.ResponseWriter, err error, msg string) 
 
 	var code schema.ErrorResponseCode
 
-	switch err {
-	case bookclub.ErrInvalidCredentials:
+	if errors.Is(err, bookclub.ErrInvalidCredentials) {
 		code = schema.N401
-	case bookclub.ErrInvalidEmail, bookclub.ErrInvalidPassword:
+	} else if errors.Is(err, bookclub.ErrInvalidEmail) || errors.Is(err, bookclub.ErrInvalidPassword) {
 		code = schema.N400
-	case bookclub.ErrAlreadyExists:
+	} else if errors.Is(err, bookclub.ErrAlreadyExists) {
 		code = schema.N409
-	case bookclub.ErrInvalidBody:
+	} else if errors.Is(err, bookclub.ErrInvalidBody) {
 		code = schema.N400
-	default:
+	} else {
 		code = schema.N500
 		if msg == "" {
 			msg = bookclub.ErrInternalError.Error()
@@ -81,6 +81,7 @@ func newErrorResponse(err error, code schema.ErrorResponseCode, msg string) wrap
 	if msg == "" {
 		msg = err.Error()
 	}
+
 	return wrappedErrorResponse{
 		err: err,
 		ErrorResponse: schema.ErrorResponse{

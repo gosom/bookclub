@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/gosom/bookclub"
 	"github.com/gosom/bookclub/mocks"
+	"github.com/gosom/bookclub/observ"
 	"github.com/gosom/bookclub/usecases/authuc"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -66,7 +67,10 @@ func Test_Login(t *testing.T) {
 
 		store := mocks.NewMockStorage(mctrl)
 		store.EXPECT().GetUserByEmail(gomock.Any(), gomock.Any()).
-			Return(bookclub.User{}, bookclub.ErrInternalError)
+			Return(
+				bookclub.User{},
+				observ.Wrap(errors.New("storage error"), bookclub.ErrInternalError),
+			)
 
 		uc := authuc.NewAuthUseCases(store, nil)
 

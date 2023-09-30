@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gosom/bookclub"
+	"github.com/gosom/bookclub/observ"
 )
 
 var _ bookclub.AuthUseCases = (*authUseCases)(nil)
@@ -34,7 +35,11 @@ func (o *authUseCases) Login(ctx context.Context, params bookclub.LoginParams) (
 			return "", "", bookclub.ErrInvalidCredentials
 		}
 
-		return "", "", bookclub.ErrInternalError
+		if errors.Is(err, bookclub.ErrInternalError) {
+			return "", "", err
+		}
+
+		return "", "", observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	if err := user.ComparePassword(params.Password); err != nil {
@@ -47,7 +52,7 @@ func (o *authUseCases) Login(ctx context.Context, params bookclub.LoginParams) (
 	})
 
 	if err != nil {
-		return "", "", bookclub.ErrInternalError
+		return "", "", observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	refreshToken, err := o.jwtProvider.GenerateRefreshToken(ctx, bookclub.JWTGenerateParams{
@@ -56,7 +61,7 @@ func (o *authUseCases) Login(ctx context.Context, params bookclub.LoginParams) (
 		TTL:     1 * time.Hour,
 	})
 	if err != nil {
-		return "", "", bookclub.ErrInternalError
+		return "", "", observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	return accessToken, refreshToken, nil
@@ -69,7 +74,10 @@ func (o *authUseCases) Refresh(ctx context.Context, refreshToken string) (string
 	}
 
 	if !claims.Refresh {
-		return "", "", bookclub.ErrInvalidCredentials
+		return "", "", observ.Wrap(
+			errors.New("tried to refersh without refresh=true"),
+			bookclub.ErrInvalidCredentials,
+		)
 	}
 
 	accessToken, err := o.jwtProvider.GenerateToken(ctx, bookclub.JWTGenerateParams{
@@ -78,7 +86,7 @@ func (o *authUseCases) Refresh(ctx context.Context, refreshToken string) (string
 	})
 
 	if err != nil {
-		return "", "", bookclub.ErrInternalError
+		return "", "", observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	refreshToken, err = o.jwtProvider.GenerateRefreshToken(ctx, bookclub.JWTGenerateParams{
@@ -87,7 +95,7 @@ func (o *authUseCases) Refresh(ctx context.Context, refreshToken string) (string
 		TTL:     1 * time.Hour,
 	})
 	if err != nil {
-		return "", "", bookclub.ErrInternalError
+		return "", "", observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	return accessToken, refreshToken, nil

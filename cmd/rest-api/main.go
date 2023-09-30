@@ -14,6 +14,7 @@ import (
 	"github.com/gosom/bookclub/api"
 	"github.com/gosom/bookclub/api/schema"
 	"github.com/gosom/bookclub/jwtprovider"
+	"github.com/gosom/bookclub/observ"
 	"github.com/gosom/bookclub/postgres"
 	"github.com/gosom/bookclub/usecases/authuc"
 	"github.com/gosom/bookclub/usecases/useruc"
@@ -73,7 +74,12 @@ func main() {
 
 	r := chi.NewRouter()
 
-	schema.HandlerFromMux(bookclubAPI, r)
+	schema.HandlerWithOptions(bookclubAPI, schema.ChiServerOptions{
+		BaseRouter: r,
+		Middlewares: []schema.MiddlewareFunc{
+			observ.LogMiddleware,
+		},
+	})
 
 	s := &http.Server{
 		Handler: r,

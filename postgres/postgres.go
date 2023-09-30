@@ -14,6 +14,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/gosom/bookclub"
+	"github.com/gosom/bookclub/observ"
 	"github.com/gosom/bookclub/postgres/db"
 )
 
@@ -52,7 +53,7 @@ func (s *storage) CreateUser(
 			}
 		}
 
-		return bookclub.User{}, bookclub.ErrInternalError
+		return bookclub.User{}, observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	return dbUserToUser(user), nil
@@ -68,7 +69,7 @@ func (s *storage) GetUserByEmail(
 			return bookclub.User{}, bookclub.ErrNotFound
 		}
 
-		return bookclub.User{}, bookclub.ErrInternalError
+		return bookclub.User{}, observ.Wrap(err, bookclub.ErrInternalError)
 	}
 
 	return dbUserToUser(user), nil
@@ -88,7 +89,6 @@ func dbUserToUser(dbUser db.User) bookclub.User {
 }
 
 func Migrate(dbAddr, migrationsPath string) error {
-	fmt.Println(dbAddr)
 	_, second, ok := strings.Cut(dbAddr, "://")
 	if !ok {
 		return errors.New("invalid dbAddr")
